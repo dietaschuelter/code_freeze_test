@@ -1,24 +1,87 @@
 #! /bin/bash
-set -x
-
+#set -x
 # -----------------------------------------------------------------
 BASIC_REL_STR=0.0
-ACCESS_TOKEN=../my_github_access_token
-#ACCESS_TOKEN=./hugo
+GITHUB_USER=""
+GITHUB_ACCESS_TOKEN=""
+REPO_OWNER=""
+REPO=REPO=$(basename $PWD)
 
-if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
-  echo "usage: code_freeze.sh <new basic release string, eg. 1.23>"
+# ---------
+USAGE="usage: $0 <new basic release string, eg. 1.23> -r <repository name> -o <respository owner> -u <github user>  options: -t <github access token>"
+
+#if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
+if [ "$#" -lt 1 ] ; then
+  echo $USAGE
   exit 1;
 fi
 
-if [ ! -f $ACCESS_TOKEN ]; 
-then
-   echo "missing file with github access token "$ACCESS_TOKEN
-   exit 1;
+ 
+while getopts ":a:r:o:u:t::" opt; do
+  case $opt in
+    r)
+      echo "-r was triggered, Parameter: $OPTARG" >&2
+      REPO=$OPTARG
+      echo "REPO: "$REPO
+      ;;
+    o)
+      echo "-o was triggered, Parameter: $OPTARG" >&2
+      REPO_OWNER=$OPTARG
+      echo "REPO: "$REPO_OWNER
+      ;;
+    u)
+      echo "-u was triggered, Parameter: $OPTARG" >&2
+      GITHUB_USER=$OPTARG
+      echo "GITHUB_USER: "$GITHUB_USER
+      ;;
+    t)
+      echo "-t was triggered, Parameter: $OPTARG" >&2
+      GITHUB_ACCESS_TOKEN=$OPTARG
+      echo "GITHUB_USER: "$GITHUB_ACCESS_TOKEN
+      ;;
+    a)
+      echo "-a was triggered, Parameter: $OPTARG" >&2
+      HUGO=$OPTARG
+      echo "HUGO: "$HUGO
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+    :)
+      echo "Option -$OPTARG requires an argument." >&2
+      exit 1
+      ;;
+  esac
+done
+# -----------------------------------------------------------------
+if [ ! -n "$REPO" ]; then
+    echo "REPO is empty."
+    echo $USAGE
+    exit 1;
 fi
 
-# -----------------------------------------------------------------
+if [ ! -n "$REPO_OWNER" ]; then
+    echo "REPO_OWNER is empty."
+    echo $USAGE
+    exit 1;
+fi
 
+if [ ! -n "$GITHUB_USER" ]; then
+    echo "GITHUB_USER is empty."
+    echo $USAGE
+    exit 1;
+fi
+
+echo "REPO: "$REPO
+echo "REPO_OWNER: "$REPO_OWNER
+echo "GITHUB_USER: "$GITHUB_USER
+ 
+
+
+# -----------------------------------------------------------------
+# create branch, create tag
+# -----------------------------------------------------------------
 #Basic Str:    1.x
 #Tag:          1.x.0-rc1    
 #Branch:       rel-1.x
@@ -29,11 +92,7 @@ fi
              BRANCH=rel-$BASIC_REL_STR
            REL_NAME="Booking Backend "$BASIC_REL_STR".0"
         DESCRIPTION=""
-    
-
-# -----------------------------------------------------------------
-# create branch, create tag
-# -----------------------------------------------------------------
+        
 #echo 
 #echo "release string: "$BASIC_REL_STR
 #echo "release tag:    "$REL_TAG
@@ -55,8 +114,11 @@ if [ ! -n "$BRANCH" ]; then
     exit 1;
 fi
 
+#exit -1;
+
+# -----------------------------------------------------------------
 git checkout master; git fetch; git pull
-git checkout -b $BRANCH; git branch $BRANCH
+git checkout -b $BRANCH
 git push origin $BRANCH
 
 git tag $REL_TAG; git push --tag
@@ -66,28 +128,55 @@ git tag $REL_TAG; git push --tag
 # -----------------------------------------------------------------
 #REPO=booking-system
 #REPO=code_freeze_test
-REPO=$(basename $PWD)
-ACCESS_TOKEN=$(cat ../my_github_access_token)
-REPO_OWNER=dietaschuelter
+#REPO=$(basename $PWD)
+#GITHUB_ACCESS_TOKEN=$(cat ../my_github_access_token)
+#if [ ! -f $GITHUB_ACCESS_TOKEN ]; 
+#then
+#   echo "missing file with github access token "$GITHUB_ACCESS_TOKEN
+#   exit 1;
+#fi
+#REPO_OWNER=dietaschuelter
 #REPO_OWNER=goeuro
 
-if [ ! -n "$REPO" ]; then
-    echo "REPO is empty."
-    exit 1;
+
+GITHUB_AUTH=${GITHUB_USER}:${GITHUB_ACCESS_TOKEN}
+echo $GITHUB_AUTH
+
+API_JSON={\"tag_name\":\"$REL_TAG\",\"target_commitish\":\"master\",\"name\":\"$REL_NAME\",\"body\":\"$DESCRIPTION\",\"draft\":false,\"prerelease\":true}
+
+echo $API_JSON
+
+
+if [ -z "$GITHUB_ACCESS_TOKEN" ]; then
+    echo "GITHUB_ACCESS_TOKEN is empty, so not auth"
+    curl -i \
+    -d "$API_JSON" \
+    -H "Accept: application/json" \
+    -H "Content-Type:application/json" \
+    -X POST \
+    "https://api.github.com/repos/$REPO_OWNER/$REPO/releases"
+else
+  echo "GITHUB_ACCESS_TOKEN: "$GITHUB_ACCESS_TOKEN
+    curl -i \
+    -d "$API_JSON" \
+    -H "Accept: application/json" \
+    -H "Content-Type:application/json" \
+    -u $GITHUB_AUTH \
+    -X POST \
+    "https://api.github.com/repos/$REPO_OWNER/$REPO/releases"
 fi
-if [ ! -n "$ACCESS_TOKEN" ]; then
-    echo "ACCESS_TOKEN is empty."
-    exit 1;
-fi
-if [ ! -n "$REPO_OWNER" ]; then
-    echo "REPO_OWNER is empty."
-    exit 1;
-fi
+
+#curl -i \
+#-d "$API_JSON" \
+#-H "Accept: application/json" \
+#-H "Content-Type:application/json" \
+#-u $GITHUB_AUTH \
+#-X POST \
+#"https://api.github.com/repos/$REPO_OWNER/$REPO/releases"
 
 # -----------------------------------------------------------------
 # list releases of repository
-# curl https://api.github.com/repos/dietaschuelter/code_freeze_test/releases
-#GIT_USER="\"$REPO_OWNER:$ACCESS_TOKEN\""
+# curl https://api.github.com/repos/$GITHUB_AUTH/code_freeze_test/releases
 # -----------------------------------------------------------------
 # list releases of repository
 # curl https://api.github.com/repos/dietaschuelter/code_freeze_test/releases
@@ -95,23 +184,7 @@ fi
 # basic authentification
 # curl -i -u your_username https://api.github.com/users/defunkt
 # -----------------------------------------------------------------
-#GIT_USER=$REPO_OWNER" https://api.github.com/users/defunkt"
-GIT_USER=${REPO_OWNER}:${ACCESS_TOKEN}
-echo $GIT_USER
-
-API_JSON={\"tag_name\":\"$REL_TAG\",\"target_commitish\":\"master\",\"name\":\"$REL_NAME\",\"body\":\"$DESCRIPTION\",\"draft\":false,\"prerelease\":true}
-
-echo $API_JSON
-
-
-curl -i \
--d "$API_JSON" \
--H "Accept: application/json" \
--H "Content-Type:application/json" \
--u $GIT_USER \
--X POST \
-"https://api.github.com/repos/$REPO_OWNER/$REPO/releases"
-
+#GITHUB_AUTH=$REPO_OWNER" https://api.github.com/users/defunkt"
 # -----------------------------------------------------------------
 #  name	            Type	          Description
 #  tag_name	        string	Required. The name of the tag.
