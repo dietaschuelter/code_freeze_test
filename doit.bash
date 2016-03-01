@@ -65,7 +65,8 @@ git tag $REL_TAG; git push --tag
 
 # -----------------------------------------------------------------
 #REPOSITORY=booking-system
-REPOSITORY=code_freeze_test
+#REPOSITORY=code_freeze_test
+REPOSITORY=$(basename $PWD)
 ACCESS_TOKEN=$(cat ./my_github_access_token)
 OWNER=dietaschuelter
 
@@ -97,15 +98,16 @@ API_JSON={\"tag_name\":\"$REL_TAG\",\"target_commitish\":\"master\",\"name\":\"$
 
 echo $API_JSON
 
+#-u "$USER" \
 
 
 curl -i \
 -d "$API_JSON" \
 -H "Accept: application/json" \
 -H "Content-Type:application/json" \
--u "$USER" \
+-u "$OWNER https://api.github.com/users/defunkt" \
 -X POST \
-"https://api.github.com/repos/dietaschuelter/code_freeze_test/releases"
+"https://api.github.com/repos/$OWNER/$REPOSITORY/releases"
 
 #-H "\"Accept: application/json\"" \
 #-H "\"Content-Type:application/json\"" \
