@@ -3,7 +3,7 @@ set -x
 
 # -----------------------------------------------------------------
 BASIC_REL_STR=0.0
-ACCESS_TOKEN=./my_github_access_token
+ACCESS_TOKEN=../my_github_access_token
 #ACCESS_TOKEN=./hugo
 
 if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
@@ -64,66 +64,52 @@ git tag $REL_TAG; git push --tag
 
 
 # -----------------------------------------------------------------
-#REPOSITORY=booking-system
-#REPOSITORY=code_freeze_test
-REPOSITORY=$(basename $PWD)
-ACCESS_TOKEN=$(cat ./my_github_access_token)
-OWNER=dietaschuelter
+#REPO=booking-system
+#REPO=code_freeze_test
+REPO=$(basename $PWD)
+ACCESS_TOKEN=$(cat ../my_github_access_token)
+REPO_OWNER=dietaschuelter
 
-if [ ! -n "$REPOSITORY" ]; then
-    echo "REPOSITORY is empty."
+if [ ! -n "$REPO" ]; then
+    echo "REPO is empty."
     exit 1;
 fi
 if [ ! -n "$ACCESS_TOKEN" ]; then
     echo "ACCESS_TOKEN is empty."
     exit 1;
 fi
-if [ ! -n "$OWNER" ]; then
-    echo "OWNER is empty."
+if [ ! -n "$REPO_OWNER" ]; then
+    echo "REPO_OWNER is empty."
     exit 1;
 fi
 
 # -----------------------------------------------------------------
 # list releases of repository
 # curl https://api.github.com/repos/dietaschuelter/code_freeze_test/releases
-#USER="\"$OWNER:$ACCESS_TOKEN\""
-USER=${OWNER}:${ACCESS_TOKEN}
-echo $USER
-
-#API_JSON=$(printf '{"tag_name":"%s","target_commitish":"master","name":"%s","body":"%s","draft":false,"prerelease":true}' $REL_TAG $REL_NAME $DESCRIPTION)
+#GIT_USER="\"$REPO_OWNER:$ACCESS_TOKEN\""
+# -----------------------------------------------------------------
+# list releases of repository
+# curl https://api.github.com/repos/dietaschuelter/code_freeze_test/releases
+#
+# basic authentification
+# curl -i -u your_username https://api.github.com/users/defunkt
+# -----------------------------------------------------------------
+#GIT_USER=$REPO_OWNER" https://api.github.com/users/defunkt"
+GIT_USER=${REPO_OWNER}:${ACCESS_TOKEN}
+echo $GIT_USER
 
 API_JSON={\"tag_name\":\"$REL_TAG\",\"target_commitish\":\"master\",\"name\":\"$REL_NAME\",\"body\":\"$DESCRIPTION\",\"draft\":false,\"prerelease\":true}
 
-#{\"tag_name\":\"$REL_TAG\",\"target_commitish\":\"master\",\"name\":\"$REL_NAME\",\"body\":\"$DESCRIPTION\",\"draft\":false,\"prerelease\":true}
-
 echo $API_JSON
-
-#-u "$USER" \
 
 
 curl -i \
 -d "$API_JSON" \
 -H "Accept: application/json" \
 -H "Content-Type:application/json" \
--u "$OWNER https://api.github.com/users/defunkt" \
+-u $GIT_USER \
 -X POST \
-"https://api.github.com/repos/$OWNER/$REPOSITORY/releases"
-
-#-H "\"Accept: application/json\"" \
-#-H "\"Content-Type:application/json\"" \
-
-#curl -i \
-#--data \'$API_JSON\' \
-#-H "\"Accept: application/json\"" \
-#-H "\"Content-Type:application/json\"" \
-#-u "$USER" \
-#-X POST \
-#"https://api.github.com/repos/dietaschuelter/code_freeze_test/releases"
-
-#--data \'$API_JSON\' \
-# this one works
-#echo curl -H "\"Accept: application/json\"" -H "\"Content-Type: application/json\"" --request POST https://api.github.com/repos/dietaschuelter/code_freeze_test/releases -u "\"dietaschuelter:941e6cce9130bfd6eeec9f316582cd4b7c91e271\"" -d \''{"tag_name":"rel-2.00.0-rc1","target_commitish":"master","name":"Booking Backend 2.00.0","body":"DESCRIPTION","draft": false,"prerelease":true}'\'
-
+"https://api.github.com/repos/$REPO_OWNER/$REPO/releases"
 
 # -----------------------------------------------------------------
 #  name	            Type	          Description
@@ -144,7 +130,3 @@ curl -i \
 #    "prerelease": false
 #  }
 # -----------------------------------------------------------------
-#API_JSON=$(printf '{"tag_name": "%s","target_commitish": "master","name": "%s","body": "%s","draft": false,"prerelease": true}' $REL_TAG "$REL_NAME" $DESCRIPTION)
-#echo $API_JSON
-
-#--data \''{"tag_name":"'"$REL_TAG"'","target_commitish":"master","name":"'"$REL_NAME"'","body":"'"$DESCRIPTION"'","draft":false,"prerelease":true}'\' \
