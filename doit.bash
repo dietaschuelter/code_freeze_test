@@ -69,6 +69,7 @@ git tag $REL_TAG; git push --tag
 REPO=$(basename $PWD)
 ACCESS_TOKEN=$(cat ../my_github_access_token)
 REPO_OWNER=dietaschuelter
+#REPO_OWNER=goeuro
 
 if [ ! -n "$REPO" ]; then
     echo "REPO is empty."
