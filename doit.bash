@@ -97,8 +97,6 @@ echo "REPO:        "$REPO
 echo "REPO_OWNER:  "$REPO_OWNER
 echo "GITHUB_USER: "$GITHUB_USER
  
-exit
-
 # -----------------------------------------------------------------
 # create branch, create tag
 # -----------------------------------------------------------------
