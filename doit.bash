@@ -8,76 +8,96 @@ REPO_OWNER=""
 REPO=REPO=$(basename $PWD)
 
 # ---------
-USAGE="usage: $0 <new basic release string, eg. 1.23> -r <repository name> -o <respository owner> -u <github user>  options: -t <github access token>"
+EXAMPLE="example: $0 1.23 -r booking-system -o goeuro -u erwinlottemann"
+USAGE="usage: $0 <new basic release string> -r <repository name> -o <respository owner> -u <github user>  optional: -t <github access token>"
+
 
 #if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
 if [ "$#" -lt 1 ] ; then
   echo $USAGE
+  echo $EXAMPLE
   exit 1;
 fi
 
- 
-while getopts ":a:r:o:u:t::" opt; do
-  case $opt in
-    r)
-      echo "-r was triggered, Parameter: $OPTARG" >&2
-      REPO=$OPTARG
-      echo "REPO: "$REPO
-      ;;
-    o)
-      echo "-o was triggered, Parameter: $OPTARG" >&2
-      REPO_OWNER=$OPTARG
-      echo "REPO: "$REPO_OWNER
-      ;;
-    u)
-      echo "-u was triggered, Parameter: $OPTARG" >&2
-      GITHUB_USER=$OPTARG
-      echo "GITHUB_USER: "$GITHUB_USER
-      ;;
-    t)
-      echo "-t was triggered, Parameter: $OPTARG" >&2
-      GITHUB_ACCESS_TOKEN=$OPTARG
-      echo "GITHUB_USER: "$GITHUB_ACCESS_TOKEN
-      ;;
-    a)
-      echo "-a was triggered, Parameter: $OPTARG" >&2
-      HUGO=$OPTARG
-      echo "HUGO: "$HUGO
-      ;;
-    \?)
-      echo "Invalid option: -$OPTARG" >&2
-      exit 1
-      ;;
-    :)
-      echo "Option -$OPTARG requires an argument." >&2
-      exit 1
-      ;;
-  esac
+while [[ $# > 0 ]] ; do
+        printf "\n"
+        echo "\$1 = $1"
+        
+        if [[ "$1" =~ ^-r ]]; then
+          echo "-r"
+          shift
+          REPO=$1
+        fi
+        if [[ "$1" =~ ^-o ]]; then
+          echo "-o"
+          shift
+          REPO_OWNER=$1
+        fi
+        if [[ "$1" =~ ^-u ]]; then
+          echo "-u"
+          shift
+          GITHUB_USER=$1
+        fi
+        if [[ "$1" =~ ^-t ]]; then
+          echo "-t"
+          shift
+          GITHUB_ACCESS_TOKEN=$1
+        fi
+        #else
+        #  echo "no - at beginning"
+        #fi
+        BASIC_REL_STR=$1
+        shift
 done
+
+
+
 # -----------------------------------------------------------------
+#REPO=booking-system
+#REPO=$(basename $PWD)
+#GITHUB_ACCESS_TOKEN=$(cat ../my_github_access_token)
+#if [ ! -f $GITHUB_ACCESS_TOKEN ]; 
+#then
+#   echo "missing file with github access token "$GITHUB_ACCESS_TOKEN
+#   exit 1;
+#fi
+#REPO_OWNER=dietaschuelter
+#REPO_OWNER=goeuro
+
+if [ ! -n "$BASIC_REL_STR" ]; then
+    echo "BASIC_REL_STR is empty."
+    echo $USAGE
+    echo $EXAMPLE
+    exit 1;
+fi
+
 if [ ! -n "$REPO" ]; then
     echo "REPO is empty."
     echo $USAGE
+    echo $EXAMPLE
     exit 1;
 fi
 
 if [ ! -n "$REPO_OWNER" ]; then
     echo "REPO_OWNER is empty."
     echo $USAGE
+    echo $EXAMPLE
     exit 1;
 fi
 
 if [ ! -n "$GITHUB_USER" ]; then
     echo "GITHUB_USER is empty."
     echo $USAGE
+    echo $EXAMPLE
     exit 1;
 fi
-
-echo "REPO: "$REPO
-echo "REPO_OWNER: "$REPO_OWNER
+   
+echo "REL_STR:     "$BASIC_REL_STR
+echo "REPO:        "$REPO
+echo "REPO_OWNER:  "$REPO_OWNER
 echo "GITHUB_USER: "$GITHUB_USER
  
-
+exit
 
 # -----------------------------------------------------------------
 # create branch, create tag
@@ -87,7 +107,7 @@ echo "GITHUB_USER: "$GITHUB_USER
 #Branch:       rel-1.x
 #Release-name: Booking Backend 1.x.0
 
-      BASIC_REL_STR=$1
+#     BASIC_REL_STR=$1
             REL_TAG=rel-$BASIC_REL_STR.0-rc1
              BRANCH=rel-$BASIC_REL_STR
            REL_NAME="Booking Backend "$BASIC_REL_STR".0"
@@ -126,17 +146,7 @@ git tag $REL_TAG; git push --tag
 
 
 # -----------------------------------------------------------------
-#REPO=booking-system
-#REPO=code_freeze_test
-#REPO=$(basename $PWD)
-#GITHUB_ACCESS_TOKEN=$(cat ../my_github_access_token)
-#if [ ! -f $GITHUB_ACCESS_TOKEN ]; 
-#then
-#   echo "missing file with github access token "$GITHUB_ACCESS_TOKEN
-#   exit 1;
-#fi
-#REPO_OWNER=dietaschuelter
-#REPO_OWNER=goeuro
+
 
 
 GITHUB_AUTH=${GITHUB_USER}:${GITHUB_ACCESS_TOKEN}
